@@ -29,13 +29,15 @@ py_version = 312
 [tool.poetry]
 authors = ["ovsds <github@ovsds.ru>"]
 description = "Speech To Text Bot Backend"
-name = "speech-to-text-bot-backend"
+name = "speech-to-text-bot"
 version = "0.0.1"
 
 [tool.poetry.dependencies]
 pydantic = "^2.0.2"
 pydantic-settings = "^2.0.1"
+pydub = "^0.25.1"
 python = "~3.12"
+speechrecognition = "3.10.0" # fixing due to google recognition api
 
 [tool.poetry.group.dev]
 optional = true

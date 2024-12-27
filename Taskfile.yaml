@@ -132,5 +132,8 @@ tasks:
         owner_github_login='ovsds'
         scripts='true'
         services='backend'
+        with_python='true'
+        with_cookiecutter='false'
+        with_trivy='false'
     vars:
       TEMPLATE_PATH: '{{.TEMPLATE_PATH | default "https://github.com/ovsds/template-repository"}}'

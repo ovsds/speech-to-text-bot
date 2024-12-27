@@ -2,11 +2,16 @@
 
 ## Usage
 
+### Dependencies
+
+- ffmpeg
+- flac
+
 ## Development
 
 ### Global dependencies
 
-- poetry
+- [poetry](https://python-poetry.org/docs/#installation)
 
 ### Taskfile commands
 

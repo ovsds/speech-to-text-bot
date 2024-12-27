@@ -6,7 +6,7 @@ import pydantic_settings
 import lib.utils.logging as logging_utils
 
 
-class AppSettings(pydantic_settings.BaseSettings):
+class AppSettings(pydantic.BaseModel):
     env: str = "production"
     debug: bool = False
 
@@ -16,20 +16,42 @@ class AppSettings(pydantic_settings.BaseSettings):
 
     @property
     def is_debug(self) -> bool:
-        if not self.is_development:
+        if not self.is_development and self.debug:
             warnings.warn("APP_DEBUG is True in non-development environment", UserWarning)
 
         return self.debug
 
 
-class LoggingSettings(pydantic_settings.BaseSettings):
+class LoggingSettings(pydantic.BaseModel):
     level: logging_utils.LogLevel = "INFO"
     format: str = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
+
+
+class ServerSettings(pydantic.BaseModel):
+    host: str = "localhost"
+    port: int = 8080
+    public_host: str = NotImplemented
+
+
+class TelegramSettings(pydantic.BaseModel):
+    token: str = NotImplemented
+    bot_name: str = "SpeechToTextBot"
+    bot_short_description: str = "Speech to text bot"
+    bot_description: str = "Speech to text bot"
+    admin_ids: list[int] = []
+
+    webhook_enabled: bool = True
+    webhook_url: str = "/api/v1/telegram/webhook"
+    webhook_secret_token: str = NotImplemented
 
 
 class Settings(pydantic_settings.BaseSettings):
     app: AppSettings = pydantic.Field(default_factory=AppSettings)
     logs: LoggingSettings = pydantic.Field(default_factory=LoggingSettings)
+    server: ServerSettings = pydantic.Field(default_factory=ServerSettings)
+    telegram: TelegramSettings = pydantic.Field(default_factory=TelegramSettings)
+
+    thread_pool_executor_max_workers: int = 10
 
     model_config = pydantic_settings.SettingsConfigDict(
         env_nested_delimiter="__",
@@ -53,7 +75,5 @@ class Settings(pydantic_settings.BaseSettings):
 
 
 __all__ = [
-    "AppSettings",
-    "LoggingSettings",
     "Settings",
 ]

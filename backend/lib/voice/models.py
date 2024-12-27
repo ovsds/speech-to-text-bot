@@ -35,4 +35,8 @@ class RecognitionResult:
     audio: Audio
 
 
-__all__ = ["Audio", "AudioFormat"]
+__all__ = [
+    "Audio",
+    "AudioFormat",
+    "RecognitionResult",
+]

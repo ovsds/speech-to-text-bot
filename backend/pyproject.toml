@@ -33,6 +33,9 @@ name = "speech-to-text-bot"
 version = "0.0.1"
 
 [tool.poetry.dependencies]
+aiogram = "^3.16.0"
+aiohttp = "^3.11.11"
+orjson = "^3.10.12"
 pydantic = "^2.0.2"
 pydantic-settings = "^2.0.1"
 pydub = "^0.25.1"
@@ -43,15 +46,15 @@ speechrecognition = "3.10.0" # fixing due to google recognition api
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-black = "24.3.0"
-coverage = "7.4.4"
-deptry = "^0.18.0"
-pytest = "8.1.1"
-pytest-asyncio = "0.23.6"
-pytest-mock = "3.14.0"
-ruff = "0.3.4"
-sort-all = "1.2.0"
-toml-sort = "0.23.1"
+black = "*"
+coverage = "*"
+deptry = "*"
+pytest = "*"
+pytest-asyncio = "*"
+pytest-mock = "*"
+ruff = "*"
+sort-all = "*"
+toml-sort = "*"
 
 [tool.pyright]
 exclude = [

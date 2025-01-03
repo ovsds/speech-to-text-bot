@@ -2,23 +2,29 @@ import asyncio
 import concurrent.futures as concurrent_futures
 import dataclasses
 import io
+import logging
 import typing
 
 import speech_recognition
 
+import lib.voice.clients.conversion as voice_conversion_clients
 import lib.voice.models as voice_models
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True)
 class SpeechRecognitionClient:
     loop: asyncio.AbstractEventLoop
     thread_pool_executor: concurrent_futures.ThreadPoolExecutor
+    conversion_client: voice_conversion_clients.ConversionClientProtocol
 
     async def recognize(self, audio: voice_models.Audio) -> voice_models.RecognitionResult:
+        audio = await self.conversion_client.convert(audio, voice_models.AudioFormat.WAV)
         return await self.loop.run_in_executor(self.thread_pool_executor, self._recognize, audio)
 
     def _recognize(self, audio: voice_models.Audio) -> voice_models.RecognitionResult:
-        assert audio.format == voice_models.AudioFormat.WAV
+        logger.debug("Recognizing audio, length(bytes)=%s, duration=%s", len(audio.data), audio.duration_seconds)
 
         audio_io = io.BytesIO(audio.data)
         recognizer = speech_recognition.Recognizer()

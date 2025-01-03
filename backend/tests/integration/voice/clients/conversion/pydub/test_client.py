@@ -21,9 +21,6 @@ async def test_convert_default(
     source_format: voice_models.AudioFormat,
     target_format: voice_models.AudioFormat,
 ) -> None:
-    if source_format == target_format:
-        pytest.skip("source==target")
-
     source_audio = tests_utils.read_voice_sample(source_format)
 
     client = voice_clients.PydubConversionClient(

@@ -26,6 +26,14 @@ inputs:
     description: "Poetry enabled"
     required: true
     default: "false"
+  trivy-version:
+    description: "Trivy version"
+    required: true
+    default: "v0.57.1"
+  trivy-enabled:
+    description: "Trivy enabled"
+    required: true
+    default: "false"
 
 runs:
   using: "composite"
@@ -47,3 +55,9 @@ runs:
       uses: snok/install-poetry@v1
       with:
         version: ${{ inputs.poetry-version }}
+
+    - name: Setup Trivy
+      if: ${{ inputs.trivy-enabled == 'true' }}
+      uses: aquasecurity/setup-trivy@v0.2.2
+      with:
+        version: ${{ inputs.trivy-version }}

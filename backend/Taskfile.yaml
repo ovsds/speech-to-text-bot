@@ -136,6 +136,16 @@ tasks:
         --env-file <( env| cut -f1 -d= )
         {{.DEFAULT_IMAGE_NAME}}:{{.TARGET}}
 
+  image-scan:
+    desc: Scan image for vulnerabilities
+    cmds:
+      - echo 'Scanning image for vulnerabilities...'
+      - trivy image
+        --config trivy.yaml
+        {{.DEFAULT_IMAGE_NAME}}:{{.TARGET}}
+    vars:
+      TARGET: '{{.TARGET | default "runtime"}}'
+
   test:
     desc: Run tests
     cmds:
@@ -240,7 +250,7 @@ tasks:
         service_name="Speech To Text Bot Backend"
         service_slug="speech-to-text-bot"
         service_short_slug="backend"
-        with_trivy="false"
+        with_trivy="true"
         with_ngrok="true"
         with_aiogram_utils="true"
         with_aiohttp_utils="true"
@@ -257,3 +267,17 @@ tasks:
     cmds:
       - task: image-bake
         vars: { TARGET: runtime }
+
+  ci-image-scan:
+    desc: Scan image for vulnerabilities
+    requires:
+      vars:
+        - IMAGE_TAG
+        - IMAGE_REGISTRY
+        - IMAGE_NAME
+    cmds:
+      - trivy image
+        --config trivy.yaml
+        {{.IMAGE_REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}}
+    env:
+      TRIVY_DISABLE_VEX_NOTICE: "true"

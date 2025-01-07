@@ -101,6 +101,15 @@ class Application:
         aiogram_bot = aiogram.Bot(token=settings.telegram.token)
         aiogram_dispatcher = aiogram.Dispatcher()
 
+        logger.info("Initializing aiogram common filters")
+
+        aiogram_allowed_users_filter = aiogram_utils.SenderMessageFilter(
+            user_ids=settings.telegram.allowed_user_ids + settings.telegram.admin_ids,
+            bots_allowed=False,
+        )
+
+        logger.info("Initializing aiogram handlers")
+
         aiogram_help_command_handler = aiogram_handlers.HelpCommandHandler()
         aiogram_dispatcher.message.register(
             aiogram_help_command_handler.process,
@@ -112,6 +121,7 @@ class Application:
         )
         aiogram_dispatcher.message.register(
             aiogram_media_message_handler.process,
+            aiogram_allowed_users_filter,
             *aiogram_media_message_handler.filters,
         )
 

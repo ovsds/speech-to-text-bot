@@ -20,6 +20,7 @@ env:
   APP__DEBUG: "true"
   TELEGRAM__TOKEN: "{{.TELEGRAM_TOKEN}}"
   TELEGRAM__WEBHOOK_SECRET_TOKEN: "DEFINITELY_NOT_A_SECRET"
+  TELEGRAM__ADMIN_IDS: "[{{.TELEGRAM_USER_ID}}]"
   SERVER__HOST: "0.0.0.0"
   SERVER__PORT: "8080"
   SERVER__PUBLIC_HOST: "https://{{.NGROK_DOMAIN}}"
@@ -241,6 +242,9 @@ tasks:
         service_short_slug="backend"
         with_trivy="false"
         with_ngrok="true"
+        with_aiogram_utils="true"
+        with_aiohttp_utils="true"
+        with_json_utils="true"
     vars:
       TEMPLATE_PATH: '{{.TEMPLATE_PATH | default "https://github.com/ovsds/template-service-python"}}'
 

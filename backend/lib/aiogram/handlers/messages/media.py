@@ -6,6 +6,7 @@ import aiogram
 import aiogram.filters as aiogram_filters
 import aiogram.types as aiogram_types
 
+import lib.utils.aiogram as aiogram_utils
 import lib.voice.models as voice_models
 import lib.voice.services as voice_services
 
@@ -20,14 +21,6 @@ AUDIO_MIME_TYPE_TO_FORMAT = {
 }
 
 TELEGRAM_MESSAGE_MAX_LENGTH = 4096
-
-
-@dataclasses.dataclass(frozen=True)
-class ContentTypeMessageFilter(aiogram_filters.Filter):
-    content_type: aiogram_types.ContentType
-
-    async def __call__(self, message: aiogram_types.Message, bot: aiogram.Bot) -> bool:
-        return message.content_type == self.content_type
 
 
 @dataclasses.dataclass(frozen=True)
@@ -158,11 +151,11 @@ class MediaMessageHandler:
     def filters(self) -> typing.Sequence[aiogram_filters.Filter]:
         return [
             aiogram_filters.or_f(
-                ContentTypeMessageFilter(content_type=aiogram_types.ContentType.VOICE),
-                ContentTypeMessageFilter(content_type=aiogram_types.ContentType.AUDIO),
-                ContentTypeMessageFilter(content_type=aiogram_types.ContentType.DOCUMENT),
-                ContentTypeMessageFilter(content_type=aiogram_types.ContentType.VIDEO_NOTE),
-                ContentTypeMessageFilter(content_type=aiogram_types.ContentType.VIDEO),
+                aiogram_utils.ContentTypeMessageFilter(content_type=aiogram_types.ContentType.VOICE),
+                aiogram_utils.ContentTypeMessageFilter(content_type=aiogram_types.ContentType.AUDIO),
+                aiogram_utils.ContentTypeMessageFilter(content_type=aiogram_types.ContentType.DOCUMENT),
+                aiogram_utils.ContentTypeMessageFilter(content_type=aiogram_types.ContentType.VIDEO_NOTE),
+                aiogram_utils.ContentTypeMessageFilter(content_type=aiogram_types.ContentType.VIDEO),
             )
         ]
 

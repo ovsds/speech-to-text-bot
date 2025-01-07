@@ -39,6 +39,7 @@ class TelegramSettings(pydantic.BaseModel):
     bot_short_description: str = "Speech to text bot"
     bot_description: str = "Speech to text bot"
     admin_ids: list[int] = []
+    allowed_user_ids: list[int] = []
 
     webhook_enabled: bool = True
     webhook_url: str = "/api/v1/telegram/webhook"

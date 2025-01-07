@@ -1,3 +1,5 @@
+import os
+import typing
 import warnings
 
 import pydantic
@@ -9,6 +11,7 @@ import lib.utils.logging as logging_utils
 class AppSettings(pydantic.BaseModel):
     env: str = "production"
     debug: bool = False
+    version: str = "unknown"
 
     @property
     def is_development(self) -> bool:
@@ -69,10 +72,32 @@ class Settings(pydantic_settings.BaseSettings):
     ) -> tuple[pydantic_settings.PydanticBaseSettingsSource, ...]:
         return (
             env_settings,
+            *cls.settings_yaml_sources(settings_cls),
+        )
+
+    @classmethod
+    def settings_yaml_sources(
+        cls,
+        settings_cls: type[pydantic_settings.BaseSettings],
+    ) -> typing.Sequence[pydantic_settings.YamlConfigSettingsSource]:
+        setting_yaml_env = os.environ.get("SETTINGS_YAML", None)
+
+        if setting_yaml_env is None:
+            return []
+
+        paths = setting_yaml_env.split(":")
+
+        for path in paths:
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"Settings file not found: {path}")
+
+        return [
             pydantic_settings.YamlConfigSettingsSource(
                 settings_cls,
-            ),
-        )
+                yaml_file=path,
+            )
+            for path in paths
+        ]
 
 
 __all__ = [

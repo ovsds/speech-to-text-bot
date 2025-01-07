@@ -37,7 +37,7 @@ aiogram = "^3.17.0"
 aiohttp = "^3.11.11"
 orjson = "^3.10.13"
 pydantic = "^2.10.4"
-pydantic-settings = "^2.7.1"
+pydantic-settings = {extras = ["yaml"], version = "^2.7.1"}
 pydub = "^0.25.1"
 python = "~3.12"
 speechrecognition = "3.10.0" # fixing due to google recognition api

@@ -1,0 +1,7 @@
+app:
+  env: development
+  debug: true
+server:
+  host: 0.0.0.0
+telegram:
+  webhook_secret_token: DEFINITELY_NOT_A_SECRET

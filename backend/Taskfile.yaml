@@ -14,15 +14,10 @@ vars:
   DEFAULT_IMAGE_NAME: "speech-to-text-bot"
 
 env:
-  NGROK_PORT: "8080"
-
-  APP__ENV: "development"
-  APP__DEBUG: "true"
-  TELEGRAM__TOKEN: "{{.TELEGRAM_TOKEN}}"
-  TELEGRAM__WEBHOOK_SECRET_TOKEN: "DEFINITELY_NOT_A_SECRET"
-  TELEGRAM__ADMIN_IDS: "[{{.TELEGRAM_USER_ID}}]"
-  SERVER__HOST: "0.0.0.0"
+  SETTINGS_YAML: "settings.yaml"
   SERVER__PORT: "8080"
+  TELEGRAM__TOKEN: "{{.TELEGRAM_TOKEN}}"
+  TELEGRAM__ADMIN_IDS: "[{{.TELEGRAM_USER_ID}}]"
   SERVER__PUBLIC_HOST: "https://{{.NGROK_DOMAIN}}"
 
 tasks:
@@ -134,6 +129,8 @@ tasks:
       - docker run
         --publish {{.SERVER__PORT}}:{{.SERVER__PORT}}
         --env-file <( env| cut -f1 -d= )
+        --volume {{.TASKFILE_DIR}}/settings.yaml:/settings.yaml
+        --env SETTINGS_YAML=/settings.yaml
         {{.DEFAULT_IMAGE_NAME}}:{{.TARGET}}
 
   image-scan:
@@ -228,7 +225,7 @@ tasks:
       - echo 'Setting up ngrok...'
       - ngrok config add-authtoken $NGROK_AUTH_TOKEN
       - echo 'Starting ngrok tunnel...'
-      - ngrok http --domain=$NGROK_DOMAIN $NGROK_PORT
+      - ngrok http --domain=$NGROK_DOMAIN {{.SERVER__PORT}}
 
   dev-server-start-container:
     desc: Start development application in container

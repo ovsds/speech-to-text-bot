@@ -110,7 +110,9 @@ class Application:
 
         logger.info("Initializing aiogram handlers")
 
-        aiogram_help_command_handler = aiogram_handlers.HelpCommandHandler()
+        aiogram_help_command_handler = aiogram_handlers.HelpCommandHandler(
+            app_version=settings.app.version,
+        )
         aiogram_dispatcher.message.register(
             aiogram_help_command_handler.process,
             *aiogram_help_command_handler.filters,

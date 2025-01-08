@@ -42,6 +42,7 @@
 ### Global dependencies
 
 - [poetry](https://python-poetry.org/docs/#installation)
+- [trivy](https://trivy.dev/latest/getting-started/installation/) - used for security scanning
 
 ### Taskfile commands
 

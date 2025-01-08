@@ -55,6 +55,9 @@ tasks:
       - for: { var: SERVICES, as: SERVICE }
         task: "{{.SERVICE}}:lint"
 
+      - echo 'Running GHA checks...'
+      - GH_TOKEN="$(gh auth token)" zizmor .
+
   lint-fix:
     desc: Lint fix project
     cmds:
@@ -67,6 +70,9 @@ tasks:
 
       - for: { var: SERVICES, as: SERVICE }
         task: "{{.SERVICE}}:lint-fix"
+
+      - echo 'Running GHA checks...'
+      - GH_TOKEN="$(gh auth token)" zizmor .
 
   test:
     desc: Test project

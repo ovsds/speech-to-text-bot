@@ -16,6 +16,7 @@ jobs:
       - name: Checkout config file
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           sparse-checkout: |
             commitlint.config.js
           sparse-checkout-cone-mode: false

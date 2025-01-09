@@ -13,18 +13,20 @@ vars:
 
   DEFAULT_IMAGE_NAME: "speech-to-text-bot"
 
+  DOCKER_FOLDER: "{{.TASKFILE_DIR}}/../docker"
+
 env:
-  SETTINGS_YAML: "settings.yaml"
-  SERVER__PORT: "8080"
-  TELEGRAM__TOKEN: "{{.TELEGRAM_TOKEN}}"
-  TELEGRAM__ADMIN_IDS: "[{{.TELEGRAM_USER_ID}}]"
-  SERVER__PUBLIC_HOST: "https://{{.NGROK_DOMAIN}}"
+  SETTINGS_PATH: "{{.TASKFILE_DIR}}/dev_settings.yaml"
+  SETTINGS_DOCKER_PATH: "{{.TASKFILE_DIR}}/dev_docker_settings.yaml"
+  APP_PORT: "8080"
 
 tasks:
   _python:
     internal: true
     cmds:
       - "{{.PENV}}/bin/python {{.COMMAND}}"
+    dotenv:
+      - "{{.DOCKER_FOLDER}}/.env"
 
   _pyright:
     internal: true
@@ -127,11 +129,15 @@ tasks:
     cmds:
       - echo 'Running image {{.TARGET}} target...'
       - docker run
-        --publish {{.SERVER__PORT}}:{{.SERVER__PORT}}
+        --network ${DOCKER_NETWORK}
+        --publish {{.APP_PORT}}:{{.APP_PORT}}
         --env-file <( env| cut -f1 -d= )
-        --volume {{.TASKFILE_DIR}}/settings.yaml:/settings.yaml
-        --env SETTINGS_YAML=/settings.yaml
+        --volume ${SETTINGS_PATH}:/settings.yaml
+        --volume ${SETTINGS_DOCKER_PATH}:/docker_settings.yaml
+        --env SETTINGS_PATH="/docker_settings.yaml:/settings.yaml"
         {{.DEFAULT_IMAGE_NAME}}:{{.TARGET}}
+    dotenv:
+      - "{{.DOCKER_FOLDER}}/.env"
 
   image-scan:
     desc: Scan image for vulnerabilities
@@ -225,7 +231,7 @@ tasks:
       - echo 'Setting up ngrok...'
       - ngrok config add-authtoken $NGROK_AUTH_TOKEN
       - echo 'Starting ngrok tunnel...'
-      - ngrok http --domain=$NGROK_DOMAIN {{.SERVER__PORT}}
+      - ngrok http --domain=$NGROK_DOMAIN {{.APP_PORT}}
 
   dev-server-start-container:
     desc: Start development application in container
@@ -234,6 +240,19 @@ tasks:
         vars: { TARGET: runtime_dev }
       - task: image-run
         vars: { TARGET: runtime }
+
+  dev-auxiliary-start:
+    desc: Start auxiliary services
+    cmds:
+      - echo 'Starting auxiliary containers...'
+      - task -d {{.DOCKER_FOLDER}} build ENVIRONMENT=DEV
+      - task -d {{.DOCKER_FOLDER}} start ENVIRONMENT=DEV
+
+  dev-auxiliary-stop:
+    desc: Stop auxiliary services
+    cmds:
+      - echo 'Stopping auxiliary containers...'
+      - task -d {{.DOCKER_FOLDER}} stop ENVIRONMENT=DEV
 
   update-from-template:
     desc: Update project from template
@@ -249,6 +268,7 @@ tasks:
         service_short_slug="backend"
         with_trivy="true"
         with_ngrok="true"
+        with_docker="true"
         with_aiogram_utils="true"
         with_aiohttp_utils="true"
         with_json_utils="true"

@@ -9,6 +9,9 @@ includes:
   backend:
     taskfile: ./backend
     dir: ./backend
+  docker:
+    taskfile: ./docker
+    dir: ./docker
 
 vars:
   NENV: "node_modules"
@@ -141,6 +144,8 @@ tasks:
         with_python='true'
         with_cookiecutter='false'
         with_trivy='true'
+        with_zizmor='true'
+        with_docker='true'
     vars:
       TEMPLATE_PATH: '{{.TEMPLATE_PATH | default "https://github.com/ovsds/template-repository"}}'
 

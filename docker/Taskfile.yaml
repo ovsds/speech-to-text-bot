@@ -1,0 +1,84 @@
+version: 3
+
+silent: true
+
+tasks:
+  compose:
+    desc: Run docker compose for project
+    vars:
+      BASE_FILES:
+        sh: find . -type f -name base-compose.yaml
+      DEV_FILES:
+        sh: find . -type f -name dev-compose.yaml
+      CI_FILES:
+        sh: find . -type f -name ci-compose.yaml
+      ENVIRONMENT: '{{.ENVIRONMENT | default "BASE"}}'
+    cmds:
+      - docker compose
+        --project-directory .
+        {{range $i, $file := .BASE_FILES | splitLines }} --file {{$file}}{{end}}
+        {{if eq .ENVIRONMENT "DEV"}}{{if ne .DEV_FILES "" }}{{range $i, $file := .DEV_FILES | splitLines }} --file {{$file}}{{end}}{{end}}{{end}}
+        {{if eq .ENVIRONMENT "CI"}}{{if ne .CI_FILES "" }}{{range $i, $file := .CI_FILES | splitLines }} --file {{$file}}{{end}}{{end}}{{end}}
+        {{.COMMAND}} {{.CLI_ARGS}}
+
+  build:
+    desc: Build all containers
+    cmds:
+      - task: compose
+        vars:
+          COMMAND: build
+
+  config:
+    desc: Print resulting configuration
+    cmds:
+      - task: compose
+        vars:
+          COMMAND: config
+
+  start:
+    desc: Start all containers detached
+    cmds:
+      - task: compose
+        vars:
+          COMMAND: up --detach
+
+  stop:
+    desc: Stop all containers
+    cmds:
+      - task: compose
+        vars:
+          COMMAND: down
+
+  clean:
+    desc: Stop and remove all containers
+    cmds:
+      - task: compose
+        vars:
+          COMMAND: down --rmi all --volumes --remove-orphans
+
+  show-logs:
+    desc: Show logs for all containers
+    cmds:
+      - task: compose
+        vars:
+          COMMAND: logs --follow
+
+  _check_service:
+    internal: true
+    cmds:
+      - echo -n "Checking service {{.SERVICE}}..."
+      - |
+        docker compose ps --services --status running |
+        grep -q {{.SERVICE}} && echo "OK" ||
+        (echo "ERROR: service not found"; exit 1)
+
+  check:
+    desc: Check all containers
+    cmds:
+      - for: { var: DOCKER_SERVICES, as: SERVICE }
+        task: _check_service
+        vars:
+          SERVICE: "{{.SERVICE}}"
+    vars:
+      DOCKER_SERVICES:
+        sh: ENVIRONMENT={{.ENVIRONMENT}} task compose -- config --services

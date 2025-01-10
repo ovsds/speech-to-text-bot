@@ -52,6 +52,7 @@ jobs:
           IMAGE_REGISTRY: ${{ steps.get-image-data.outputs.registry }}
           IMAGE_NAME: ${{ steps.get-image-data.outputs.name }}
           IMAGE_TAG: ${{ steps.get-image-data.outputs.tag }}
+          WORKER_IMAGE_TAG: worker-${{ steps.get-image-data.outputs.tag }}
         run: |
           task ci-image-push
 
@@ -66,14 +67,30 @@ jobs:
             IMAGE_TAG="${{ steps.get-image-data.outputs.tag }}" \
             task backend:ci-image-scan
 
+      - name: Scan backend worker image
+        id: scan-worker
+        uses: ovsds/run-with-output-action@v1
+        continue-on-error: true
+        with:
+          run: |
+            IMAGE_REGISTRY="${{ steps.get-image-data.outputs.registry }}" \
+            IMAGE_NAME="${{ steps.get-image-data.outputs.name }}" \
+            IMAGE_TAG="worker-${{ steps.get-image-data.outputs.tag }}" \
+            task backend:ci-image-scan
+
       - name: Report vulnerabilities
         uses: ovsds/create-or-update-unique-comment-action@v1
         with:
           issue-number: ${{ github.event.number }}
           body: |
             ## Vulnerabilities found
+            ### Backend
             ```
             ${{ steps.scan.outputs.stdout }}
             ```
+            ### Worker
+            ```
+            ${{ steps.scan-worker.outputs.stdout }}
+            ```
           unique-body-includes: "## Vulnerabilities found"
-          delete: ${{ steps.scan.outputs.exit_code == 0 }}
+          delete: ${{ steps.scan.outputs.exit_code == 0 && steps.scan-worker.outputs.exit_code == 0 }}

@@ -1,0 +1,8 @@
+temporalio:
+  host: "${TEMPORAL_HOSTNAME}"
+  port: ${TEMPORAL_PORT}
+audio_storage:
+  s3:
+    host: ${S3_HOSTNAME}
+    port: ${S3_API_PORT}
+main_app_url: "http://runtime:${APP_PORT}"

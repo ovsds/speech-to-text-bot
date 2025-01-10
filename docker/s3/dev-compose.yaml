@@ -1,0 +1,13 @@
+services:
+  s3:
+    ports:
+      - ${S3_EXPOSED_API_PORT}:${S3_API_PORT}
+      - ${S3_EXPOSED_CONSOLE_PORT}:${S3_CONSOLE_PORT}
+    environment:
+      MINIO_DATA_DIR: ${S3_DATA_DIR}
+    volumes:
+      - s3:${S3_DATA_DIR}
+
+volumes:
+  s3:
+    driver: local

@@ -1,0 +1,27 @@
+app:
+  env: development
+  debug: true
+server:
+  host: 0.0.0.0
+  port: ${APP_PORT}
+  public_host: https://${NGROK_DOMAIN}
+telegram:
+  token: ${TELEGRAM_TOKEN}
+  admin_ids:
+    - ${TELEGRAM_USER_ID}
+  webhook_secret_token: DEFINITELY_NOT_A_SECRET
+media_handler:
+  type: temporalio
+  temporalio:
+    host: "localhost"
+    port: ${TEMPORAL_EXPOSED_PORT}
+    namespace: ${TEMPORAL_NAMESPACE}
+    task_queue: "media_handler"
+  audio_storage:
+    type: "s3"
+    s3:
+      host: "localhost"
+      port: ${S3_EXPOSED_API_PORT}
+      bucket_name: ${S3_BUCKET_NAME}
+      access_key: ${S3_ACCESS_KEY}
+      secret_key: ${S3_SECRET_KEY}

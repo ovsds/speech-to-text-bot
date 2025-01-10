@@ -5,7 +5,7 @@ import pytest
 
 import lib.voice.clients as voice_clients
 import lib.voice.models as voice_models
-import tests.utils as tests_utils
+import tests.utils as test_utils
 
 
 @pytest.mark.parametrize(
@@ -21,9 +21,9 @@ async def test_convert_default(
     source_format: voice_models.AudioFormat,
     target_format: voice_models.AudioFormat,
 ) -> None:
-    source_audio = tests_utils.read_voice_sample(source_format)
+    source_audio = test_utils.read_voice_sample(source_format)
 
-    client = voice_clients.PydubConversionClient(
+    client = voice_clients.PydubConversion(
         loop=asyncio.get_running_loop(),
         thread_pool_executor=concurrent_futures.ThreadPoolExecutor(max_workers=1),
     )

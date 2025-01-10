@@ -32,11 +32,18 @@ class Audio:
 @dataclasses.dataclass
 class RecognitionResult:
     text: str
-    audio: Audio
+    duration_seconds: float
+
+
+@dataclasses.dataclass
+class RecognitionTaskResult:
+    recognition_results: list[RecognitionResult]
+    metadata: str
 
 
 __all__ = [
     "Audio",
     "AudioFormat",
     "RecognitionResult",
+    "RecognitionTaskResult",
 ]

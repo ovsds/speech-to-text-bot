@@ -1,0 +1,3 @@
+s3:
+  host: ${S3_HOSTNAME}
+  port: ${S3_API_PORT}

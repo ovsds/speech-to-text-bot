@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True)
-class PydubConversionClient:
+class PydubConversion:
     loop: asyncio.AbstractEventLoop
     thread_pool_executor: concurrent_futures.ThreadPoolExecutor
 
@@ -48,5 +48,5 @@ class PydubConversionClient:
 
 
 __all__ = [
-    "PydubConversionClient",
+    "PydubConversion",
 ]

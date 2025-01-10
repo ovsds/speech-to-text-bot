@@ -1,0 +1,32 @@
+services:
+  temporal-postgresql:
+    image: ${TEMPORAL_POSTGRESQL_IMAGE}
+    hostname: ${TEMPORAL_POSTGRESQL_HOSTNAME}
+    environment:
+      POSTGRESQL_PORT_NUMBER: ${TEMPORAL_POSTGRESQL_PORT}
+      POSTGRESQL_USERNAME: ${TEMPORAL_POSTGRESQL_USERNAME}
+      POSTGRESQL_PASSWORD: ${TEMPORAL_POSTGRESQL_PASSWORD}
+
+  temporal:
+    image: ${TEMPORAL_IMAGE}
+    hostname: ${TEMPORAL_HOSTNAME}
+    environment:
+      - POSTGRES_SEEDS=${TEMPORAL_POSTGRESQL_HOSTNAME}
+      - DB_PORT=${TEMPORAL_POSTGRESQL_PORT}
+      - DB=${TEMPORAL_DATABASE_DRIVER}
+      - POSTGRES_USER=${TEMPORAL_POSTGRESQL_USERNAME}
+      - POSTGRES_PWD=${TEMPORAL_POSTGRESQL_PASSWORD}
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    volumes:
+      - ./temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
+    depends_on:
+      - temporal-postgresql
+
+  temporal-ui:
+    image: ${TEMPORAL_UI_IMAGE}
+    hostname: ${TEMPORAL_UI_HOSTNAME}
+    environment:
+      - TEMPORAL_ADDRESS=${TEMPORAL_HOSTNAME}:${TEMPORAL_PORT}
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - temporal

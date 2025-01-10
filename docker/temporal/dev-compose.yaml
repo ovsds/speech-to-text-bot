@@ -1,0 +1,20 @@
+services:
+  temporal-postgresql:
+    ports:
+      - ${TEMPORAL_POSTGRESQL_EXPOSED_PORT}:${TEMPORAL_POSTGRESQL_PORT}
+    environment:
+      POSTGRESQL_VOLUME_DIR: ${TEMPORAL_POSTGRESQL_VOLUME_DIR}
+    volumes:
+      - temporal-postgresql:${TEMPORAL_POSTGRESQL_VOLUME_DIR}
+
+  temporal:
+    ports:
+      - ${TEMPORAL_EXPOSED_PORT}:${TEMPORAL_PORT}
+
+  temporal-ui:
+    ports:
+      - ${TEMPORAL_UI_EXPOSED_PORT}:${TEMPORAL_UI_PORT}
+
+volumes:
+  temporal-postgresql:
+    driver: local

@@ -37,7 +37,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Required for Zizmor
 
+      - name: Prepare auxiliary containers
+        working-directory: docker
+        run: |
+          task build
+          task start
+        env:
+          ENVIRONMENT: CI
+
       - name: Test backend in container
         working-directory: backend
         run: |
           task test-container
+
+      - name: Clean up auxiliary containers
+        if: success() || failure()
+        working-directory: docker
+        run: |
+          task clean
+        env:
+          ENVIRONMENT: CI

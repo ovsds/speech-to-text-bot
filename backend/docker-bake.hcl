@@ -1,6 +1,7 @@
 variable "IMAGE_REGISTRY" {}
 variable "IMAGE_NAME" { default = "speech-to-text-bot" }
 variable "IMAGE_TAG" {}
+variable "WORKER_IMAGE_TAG" {}
 
 target "base" {
   dockerfile = "Dockerfile"
@@ -31,6 +32,15 @@ target "runtime" {
   ]
 }
 
+target "worker" {
+  inherits = ["runtime"]
+  target = "worker"
+  tags = ["${IMAGE_REGISTRY}/${IMAGE_NAME}:${WORKER_IMAGE_TAG}"]
+  args = {
+    APP_VERSION = WORKER_IMAGE_TAG
+  }
+}
+
 target "runtime_dev" {
   inherits = ["base"]
   target = "runtime_dev"
@@ -38,6 +48,15 @@ target "runtime_dev" {
   tags = ["${IMAGE_NAME}:runtime"]
   args = {
     APP_VERSION = "runtime-dev"
+  }
+}
+
+target "worker_dev" {
+  inherits = ["runtime_dev"]
+  target = "worker_dev"
+  tags = ["${IMAGE_NAME}:worker"]
+  args = {
+    APP_VERSION = "worker-runtime-dev"
   }
 }
 

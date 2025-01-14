@@ -33,7 +33,7 @@ jobs:
           repo: ${{ github.event.repository.name }}
           excludes: prerelease, draft
 
-      - name: Scan image for vulnerabilities
+      - name: Scan backend image for vulnerabilities
         id: scan
         uses: ovsds/run-with-output-action@v1
         continue-on-error: true
@@ -44,14 +44,30 @@ jobs:
             IMAGE_TAG="${{ steps.get_tag.outputs.release }}" \
             task backend:ci-image-scan
 
+      - name: Scan backend worker image for vulnerabilities
+        id: scan_worker
+        uses: ovsds/run-with-output-action@v1
+        continue-on-error: true
+        with:
+          run: |
+            IMAGE_REGISTRY="ghcr.io/${{ github.repository_owner }}" \
+            IMAGE_NAME="${{ github.event.repository.name }}" \
+            IMAGE_TAG="worker-${{ steps.get_tag.outputs.release }}" \
+            task backend:ci-image-scan
+
       - name: Report vulnerabilities
         uses: ovsds/create-or-update-unique-issue-action@v1
         with:
           title: "Security scan issues for ${{ steps.get_tag.outputs.release }}"
           body: |
             ## Vulnerabilities found
+            ### Backend
             ```
             ${{ steps.scan.outputs.stdout }}
             ```
+            ### Worker
+            ```
+            ${{ steps.scan_worker.outputs.stdout }}
+            ```
           unique-title-includes: "Security scan issues for "
-          close: ${{ steps.scan.outputs.exit_code == 0 }}
+          close: ${{ steps.scan.outputs.exit_code == 0 && steps.scan_worker.outputs.exit_code == 0 }}

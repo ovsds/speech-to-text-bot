@@ -4,15 +4,19 @@ import dataclasses
 import logging
 import typing
 
+import aiobotocore.session as aiobotocore_session
 import aiogram
 import aiogram.webhook.aiohttp_server as aiogram_aiohttp_webhook
 import aiohttp
 import aiohttp.typedefs as aiohttp_typedefs
 import aiohttp.web as aiohttp_web
+import temporalio.client as temporalio_client
 
 import lib.aiogram.handlers as aiogram_handlers
+import lib.aiohttp.handlers as aiohttp_handlers
 import lib.app.errors as app_errors
 import lib.app.settings as app_settings
+import lib.utils.aiobotocore as aiobotocore_utils
 import lib.utils.aiogram as aiogram_utils
 import lib.utils.aiohttp as aiohttp_utils
 import lib.utils.lifecycle as lifecycle_utils
@@ -28,7 +32,7 @@ class Application:
     lifecycle: lifecycle_utils.Lifecycle
 
     @classmethod
-    def from_settings(cls, settings: app_settings.Settings) -> typing.Self:
+    async def from_settings(cls, settings: app_settings.Settings) -> typing.Self:
         # Logging
 
         log_level = "DEBUG" if settings.app.is_debug else settings.logs.level
@@ -55,6 +59,12 @@ class Application:
         lifecycle_startup_callbacks: list[lifecycle_utils.Callback] = []
         lifecycle_shutdown_callbacks: list[lifecycle_utils.Callback] = []
 
+        logger.info("Initializing aiohttp")
+
+        aiohttp_url_dispatcher = aiohttp_web.UrlDispatcher()
+        aiohttp_middlewares: list[aiohttp_typedefs.Middleware] = []
+        aiohttp_subsystem_readiness_callbacks: list[aiohttp_utils.SubsystemReadinessCallback] = []
+
         logger.info("Initializing global dependencies")
 
         loop = asyncio.get_event_loop()
@@ -72,16 +82,16 @@ class Application:
 
         logger.info("Initializing clients")
 
-        conversion_client = voice_clients.PydubConversionClient(
+        conversion_client = voice_clients.PydubConversion(
             loop=loop,
             thread_pool_executor=thread_pool_executor,
         )
-        splitter_client = voice_clients.PydubOnSilenceSplitterClient(
+        splitter_client = voice_clients.PydubOnSilenceSplitter(
             loop=loop,
             thread_pool_executor=thread_pool_executor,
             conversion_client=conversion_client,
         )
-        recognition_client = voice_clients.SpeechRecognitionClient(
+        recognition_client = voice_clients.SpeechRecognition(
             loop=loop,
             thread_pool_executor=thread_pool_executor,
             conversion_client=conversion_client,
@@ -91,7 +101,7 @@ class Application:
 
         logger.info("Initializing services")
 
-        recognition_service = voice_services.RecognitionService(
+        recognition_service = voice_services.Recognition(
             splitter_client=splitter_client,
             recognition_client=recognition_client,
         )
@@ -117,10 +127,79 @@ class Application:
             aiogram_help_command_handler.process,
             *aiogram_help_command_handler.filters,
         )
-        aiogram_media_message_handler = aiogram_handlers.MediaMessageHandler(
-            recognition_service=recognition_service,
-            bot=aiogram_bot,
-        )
+
+        if isinstance(settings.media_handler, app_settings.SynchronousMediaHandlerSettings):
+            aiogram_media_message_handler = aiogram_handlers.SynchronousMediaMessageHandler(
+                recognition_service=recognition_service,
+                bot=aiogram_bot,
+            )
+        elif isinstance(settings.media_handler, app_settings.TemporalioMediaHandlerSettings):
+            if isinstance(settings.media_handler.audio_storage, app_settings.S3AudioStorageSettings):
+                audio_storage_s3_client = aiobotocore_utils.S3Client(
+                    client_context=aiobotocore_utils.S3ClientContext(
+                        session=aiobotocore_session.AioSession(),
+                        endpoint_url=settings.media_handler.audio_storage.s3.endpoint_url,
+                        access_key=settings.media_handler.audio_storage.s3.access_key,
+                        secret_key=settings.media_handler.audio_storage.s3.secret_key,
+                    ),
+                )
+                aiohttp_subsystem_readiness_callbacks.append(
+                    aiohttp_utils.SubsystemReadinessCallback(
+                        name="audio_storage_s3",
+                        is_ready=audio_storage_s3_client.is_ready,
+                    )
+                )
+                audio_storage_client = voice_clients.S3Storage(
+                    s3_client=audio_storage_s3_client,
+                    bucket_name=settings.media_handler.audio_storage.s3.bucket_name,
+                )
+            else:
+                raise NotImplementedError(
+                    f"Unsupported audio storage type: {settings.media_handler.audio_storage.type_name}"
+                )
+            audio_storage_temporal_client = await temporalio_client.Client.connect(
+                target_host=settings.media_handler.temporalio.endpoint_url,
+                namespace=settings.media_handler.temporalio.namespace,
+                lazy=True,
+            )
+
+            async def audio_storage_temporal_client_is_ready() -> bool:
+                try:
+                    await audio_storage_temporal_client.service_client.check_health()
+                except Exception:
+                    return False
+                return True
+
+            aiohttp_subsystem_readiness_callbacks.append(
+                aiohttp_utils.SubsystemReadinessCallback(
+                    name="audio_storage_temporal",
+                    is_ready=audio_storage_temporal_client_is_ready,
+                )
+            )
+            aiogram_media_recognition_task_service = voice_services.TemporalRecognitionTask(
+                audio_storage_client=audio_storage_client,
+                temporal_client=audio_storage_temporal_client,
+                temporal_task_queue=settings.media_handler.temporalio.task_queue,
+                split_timeout_seconds=settings.media_handler.split_timeout_seconds,
+                recognition_timeout_seconds=settings.media_handler.recognition_timeout_seconds,
+                clean_up_timeout_seconds=settings.media_handler.clean_up_timeout_seconds,
+            )
+            aiogram_media_message_handler = aiogram_handlers.TaskMediaMessageHandler(
+                recognition_task_service=aiogram_media_recognition_task_service,
+                bot=aiogram_bot,
+            )
+            aiohttp_media_callback_handler = aiohttp_handlers.MediaCallbackHandler(
+                recognition_task_service=aiogram_media_recognition_task_service,
+                callback_processor=aiogram_media_message_handler.process_callback,
+            )
+            aiohttp_url_dispatcher.add_route(
+                aiohttp_media_callback_handler.method,
+                aiohttp_media_callback_handler.path,
+                aiohttp_media_callback_handler.process,
+            )
+        else:
+            raise NotImplementedError(f"Unsupported media handler type: {settings.media_handler.type_name}")
+
         aiogram_dispatcher.message.register(
             aiogram_media_message_handler.process,
             aiogram_allowed_users_filter,
@@ -151,13 +230,7 @@ class Application:
         if not settings.telegram.webhook_enabled:
             lifecycle_main_tasks.append(aiogram_lifecycle.get_main_task())
 
-        logger.info("Initializing aiohttp")
-
-        aiohttp_url_dispatcher = aiohttp_web.UrlDispatcher()
-
         logger.info("Initializing aiohttp middlewares")
-
-        aiohttp_middlewares: list[aiohttp_typedefs.Middleware] = []
 
         logger.info("Initializing aiohttp handlers")
 
@@ -165,7 +238,7 @@ class Application:
         aiohttp_url_dispatcher.add_route("GET", "/api/v1/health/liveness", aiohttp_liveness_probe_handler.process)
 
         aiohttp_readiness_probe_handler = aiohttp_utils.ReadinessProbeHandler(
-            subsystems=[],
+            subsystems=aiohttp_subsystem_readiness_callbacks,
         )
         aiohttp_url_dispatcher.add_route("GET", "/api/v1/health/readiness", aiohttp_readiness_probe_handler.process)
 

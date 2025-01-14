@@ -11,12 +11,13 @@ services:
     image: ${TEMPORAL_IMAGE}
     hostname: ${TEMPORAL_HOSTNAME}
     environment:
+      - DEFAULT_NAMESPACE=${TEMPORAL_NAMESPACE}
       - POSTGRES_SEEDS=${TEMPORAL_POSTGRESQL_HOSTNAME}
       - DB_PORT=${TEMPORAL_POSTGRESQL_PORT}
       - DB=${TEMPORAL_DATABASE_DRIVER}
       - POSTGRES_USER=${TEMPORAL_POSTGRESQL_USERNAME}
       - POSTGRES_PWD=${TEMPORAL_POSTGRESQL_PASSWORD}
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
     volumes:
       - ./temporal/dynamicconfig:/etc/temporal/config/dynamicconfig
     depends_on:

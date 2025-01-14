@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 async def run() -> None:
     settings = app.Settings()
     try:
-        application = app.Application.from_settings(settings)
+        application = await app.Application.from_settings(settings)
     except Exception as exc:
         logger.exception("Failed to initialize application settings")
         raise app.ServerStartError("Failed to initialize application settings") from exc

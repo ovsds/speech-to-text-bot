@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True)
-class SpeechRecognitionClient:
+class SpeechRecognition:
     loop: asyncio.AbstractEventLoop
     thread_pool_executor: concurrent_futures.ThreadPoolExecutor
-    conversion_client: voice_conversion_clients.ConversionClientProtocol
+    conversion_client: voice_conversion_clients.ConversionProtocol
 
     async def recognize(self, audio: voice_models.Audio) -> voice_models.RecognitionResult:
         audio = await self.conversion_client.convert(audio, voice_models.AudioFormat.WAV)
@@ -40,10 +40,10 @@ class SpeechRecognitionClient:
 
         return voice_models.RecognitionResult(
             text=result,
-            audio=audio,
+            duration_seconds=audio.duration_seconds,
         )
 
 
 __all__ = [
-    "SpeechRecognitionClient",
+    "SpeechRecognition",
 ]

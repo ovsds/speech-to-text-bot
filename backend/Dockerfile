@@ -35,6 +35,10 @@ FROM common_runtime AS runtime
 
 COPY --from=builder /opt/app/.venv /opt/app/.venv
 
+FROM runtime AS worker
+
+CMD [".venv/bin/python", "-m", "bin.temporalio_worker"]
+
 FROM common_builder AS builder_dev
 
 RUN poetry install --with dev
@@ -44,6 +48,10 @@ FROM common_runtime AS runtime_dev
 COPY --from=builder_dev /opt/app/.venv /opt/app/.venv
 COPY --from=sources tests /opt/app/tests
 COPY --from=sources pyproject.toml /opt/app/pyproject.toml
+
+FROM runtime_dev AS worker_dev
+
+CMD [".venv/bin/python", "-m", "bin.temporalio_worker"]
 
 FROM runtime_dev AS tests_dev
 

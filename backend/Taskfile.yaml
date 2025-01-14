@@ -14,10 +14,12 @@ vars:
   DEFAULT_IMAGE_NAME: "speech-to-text-bot"
 
   DOCKER_FOLDER: "{{.TASKFILE_DIR}}/../docker"
+  SETTINGS_FOLDER: "{{.TASKFILE_DIR}}/.settings"
 
 env:
-  SETTINGS_PATH: "{{.TASKFILE_DIR}}/dev_settings.yaml"
-  SETTINGS_DOCKER_PATH: "{{.TASKFILE_DIR}}/dev_docker_settings.yaml"
+  SETTINGS_PATH: "{{.SETTINGS_FOLDER}}/dev.yaml"
+  SETTINGS_WORKER_PATH: "{{.SETTINGS_FOLDER}}/worker.yaml"
+  SETTINGS_TEST_PATH: "{{.SETTINGS_FOLDER}}/test.yaml"
   APP_PORT: "8080"
 
 tasks:
@@ -130,11 +132,13 @@ tasks:
       - echo 'Running image {{.TARGET}} target...'
       - docker run
         --network ${DOCKER_NETWORK}
-        --publish {{.APP_PORT}}:{{.APP_PORT}}
+        {{if any .HOSTNAME}}--hostname {{.HOSTNAME}}{{ end }}
+        {{if any .EXPOSED_PORT}}--publish {{.EXPOSED_PORT}}:{{.EXPOSED_PORT}}{{ end }}
         --env-file <( env| cut -f1 -d= )
-        --volume ${SETTINGS_PATH}:/settings.yaml
-        --volume ${SETTINGS_DOCKER_PATH}:/docker_settings.yaml
-        --env SETTINGS_PATH="/docker_settings.yaml:/settings.yaml"
+        --volume {{.SETTINGS_FOLDER}}:/settings
+        --env SETTINGS_PATH="/settings/dev_docker.yaml:/settings/dev.yaml"
+        --env SETTINGS_TEST_PATH="/settings/test_docker.yaml:/settings/test.yaml"
+        --env SETTINGS_WORKER_PATH="/settings/worker_docker.yaml:/settings/worker.yaml"
         {{.DEFAULT_IMAGE_NAME}}:{{.TARGET}}
     dotenv:
       - "{{.DOCKER_FOLDER}}/.env"
@@ -225,6 +229,13 @@ tasks:
       - task: _python
         vars: { COMMAND: "-m bin.main" }
 
+  dev-worker-start:
+    desc: Start development worker
+    cmds:
+      - echo 'Starting worker...'
+      - task: _python
+        vars: { COMMAND: "-m bin.worker" }
+
   dev-server-tunnel-start:
     desc: Start ngrok tunnel for development application
     cmds:
@@ -239,7 +250,18 @@ tasks:
       - task: image-bake
         vars: { TARGET: runtime_dev }
       - task: image-run
-        vars: { TARGET: runtime }
+        vars:
+          TARGET: runtime
+          HOSTNAME: runtime
+          EXPOSED_PORT: "{{.APP_PORT}}"
+
+  dev-worker-start-container:
+    desc: Start development worker in container
+    cmds:
+      - task: image-bake
+        vars: { TARGET: worker_dev }
+      - task: image-run
+        vars: { TARGET: worker }
 
   dev-auxiliary-start:
     desc: Start auxiliary services
@@ -253,6 +275,12 @@ tasks:
     cmds:
       - echo 'Stopping auxiliary containers...'
       - task -d {{.DOCKER_FOLDER}} stop ENVIRONMENT=DEV
+
+  dev-auxiliary-clean:
+    desc: Stop and remove auxiliary services
+    cmds:
+      - echo 'Stopping and removing auxiliary containers...'
+      - task -d {{.DOCKER_FOLDER}} clean ENVIRONMENT=DEV
 
   update-from-template:
     desc: Update project from template
@@ -281,9 +309,10 @@ tasks:
       vars:
         - IMAGE_TAG
         - IMAGE_REGISTRY
+        - WORKER_IMAGE_TAG
     cmds:
       - task: image-bake
-        vars: { TARGET: runtime }
+        vars: { TARGET: "runtime worker" }
 
   ci-image-scan:
     desc: Scan image for vulnerabilities

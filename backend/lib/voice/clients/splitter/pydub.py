@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True)
-class PydubOnSilenceSplitterClient:
+class PydubOnSilenceSplitter:
     loop: asyncio.AbstractEventLoop
     thread_pool_executor: concurrent_futures.ThreadPoolExecutor
-    conversion_client: voice_conversion_clients.ConversionClientProtocol
+    conversion_client: voice_conversion_clients.ConversionProtocol
 
     min_silence_length_ms: int = 800
     silence_difference_db: int = 20
@@ -71,5 +71,5 @@ class PydubOnSilenceSplitterClient:
 
 
 __all__ = [
-    "PydubOnSilenceSplitterClient",
+    "PydubOnSilenceSplitter",
 ]

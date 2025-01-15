@@ -136,12 +136,16 @@ class Application:
         elif isinstance(settings.media_handler, app_settings.TemporalioMediaHandlerSettings):
             if isinstance(settings.media_handler.audio_storage, app_settings.S3AudioStorageSettings):
                 audio_storage_s3_client = aiobotocore_utils.S3Client(
-                    client_context=aiobotocore_utils.S3ClientContext(
-                        session=aiobotocore_session.AioSession(),
-                        endpoint_url=settings.media_handler.audio_storage.s3.endpoint_url,
-                        access_key=settings.media_handler.audio_storage.s3.access_key,
-                        secret_key=settings.media_handler.audio_storage.s3.secret_key,
-                    ),
+                    session=aiobotocore_session.AioSession(),
+                    endpoint_url=settings.media_handler.audio_storage.s3.endpoint_url,
+                    access_key=settings.media_handler.audio_storage.s3.access_key,
+                    secret_key=settings.media_handler.audio_storage.s3.secret_key,
+                )
+                lifecycle_shutdown_callbacks.append(
+                    lifecycle_utils.Callback.from_dispose(
+                        name="audio_storage_s3_client",
+                        awaitable=audio_storage_s3_client.dispose(),
+                    )
                 )
                 aiohttp_subsystem_readiness_callbacks.append(
                     aiohttp_utils.SubsystemReadinessCallback(

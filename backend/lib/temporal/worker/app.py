@@ -53,6 +53,9 @@ class Application:
         logger.info("Initializing global dependencies")
 
         aiohttp_client = aiohttp.ClientSession()
+        lifecycle_shutdown_callbacks.append(
+            lifecycle_utils.Callback.from_dispose(name="aiohttp_client", awaitable=aiohttp_client.close())
+        )
         temporal_client = await temporalio_client.Client.connect(
             target_host=settings.temporalio.endpoint_url,
             namespace=settings.temporalio.namespace,
@@ -77,15 +80,20 @@ class Application:
             conversion_client=conversion_client,
         )
         if isinstance(settings.audio_storage, temporal_worker_settings.S3AudioStorageSettings):
-            storage_client = voice_clients.S3Storage(
-                s3_client=aiobotocore_utils.S3Client(
-                    client_context=aiobotocore_utils.S3ClientContext(
-                        session=aiobotocore_session.AioSession(),
-                        endpoint_url=settings.audio_storage.s3.endpoint_url,
-                        access_key=settings.audio_storage.s3.access_key,
-                        secret_key=settings.audio_storage.s3.secret_key,
-                    ),
-                ),
+            audio_storage_s3_client = aiobotocore_utils.S3Client(
+                session=aiobotocore_session.AioSession(),
+                endpoint_url=settings.audio_storage.s3.endpoint_url,
+                access_key=settings.audio_storage.s3.access_key,
+                secret_key=settings.audio_storage.s3.secret_key,
+            )
+            lifecycle_shutdown_callbacks.append(
+                lifecycle_utils.Callback.from_dispose(
+                    name="audio_storage_s3_client",
+                    awaitable=audio_storage_s3_client.dispose(),
+                )
+            )
+            audio_storage_client = voice_clients.S3Storage(
+                s3_client=audio_storage_s3_client,
                 bucket_name=settings.audio_storage.s3.bucket_name,
             )
         else:
@@ -99,14 +107,14 @@ class Application:
 
         recognition_activity = temporal_activities.Recognition(
             recognition_client=recognition_client,
-            storage_client=storage_client,
+            storage_client=audio_storage_client,
         )
         splitter_activity = temporal_activities.Splitter(
             splitter_client=splitter_client,
-            storage_client=storage_client,
+            storage_client=audio_storage_client,
         )
         cleaner_activity = temporal_activities.Cleaner(
-            storage_client=storage_client,
+            storage_client=audio_storage_client,
         )
         callback_activity = temporal_activities.Callback(
             main_app_client=main_app_client,

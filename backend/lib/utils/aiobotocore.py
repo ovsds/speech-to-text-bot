@@ -15,32 +15,31 @@ else:
 
 
 @dataclasses.dataclass
-class S3ClientContext:
+class S3Client:
     session: aiobotocore_session.AioSession
     endpoint_url: str
     access_key: str
     secret_key: str
 
-    _exit_stack: contextlib.AsyncExitStack = dataclasses.field(init=False)
+    _exit_stack: contextlib.AsyncExitStack = dataclasses.field(default_factory=contextlib.AsyncExitStack, init=False)
+    _client: AiobotocoreS3Client | None = dataclasses.field(default=None, init=False)
 
-    async def __aenter__(self) -> AiobotocoreS3Client:
-        self._exit_stack = contextlib.AsyncExitStack()
-        client_creator_context = self.session.create_client(
-            service_name="s3",
-            endpoint_url=self.endpoint_url,
-            aws_access_key_id=self.access_key,
-            aws_secret_access_key=self.secret_key,
-        )
-        client = await self._exit_stack.enter_async_context(client_creator_context)
-        return typing.cast(AiobotocoreS3Client, client)
+    @contextlib.asynccontextmanager
+    async def client_context(self) -> typing.AsyncGenerator[AiobotocoreS3Client, None]:
+        if self._client is None:
+            client_creator_context = self.session.create_client(
+                service_name="s3",
+                endpoint_url=self.endpoint_url,
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+            )
+            client = await self._exit_stack.enter_async_context(client_creator_context)
+            self._client = typing.cast(AiobotocoreS3Client, client)
 
-    async def __aexit__(self, exc_type: typing.Any, exc: typing.Any, tb: typing.Any) -> None:
-        await self._exit_stack.__aexit__(exc_type, exc, tb)
+        yield self._client
 
-
-@dataclasses.dataclass
-class S3Client:
-    client_context: S3ClientContext
+    async def dispose(self) -> None:
+        await self._exit_stack.aclose()
 
     class AlreadyExistsError(Exception): ...
 
@@ -48,7 +47,7 @@ class S3Client:
 
     async def is_ready(self) -> bool:
         try:
-            async with self.client_context as client:
+            async with self.client_context() as client:
                 await client.list_buckets()
         except Exception:
             return False
@@ -60,7 +59,7 @@ class S3Client:
         key: str,
         data: bytes,
     ) -> None:
-        async with self.client_context as client:
+        async with self.client_context() as client:
             try:
                 await client.put_object(
                     Bucket=bucket_name,
@@ -79,7 +78,7 @@ class S3Client:
         bucket_name: str,
         key: str,
     ) -> bytes:
-        async with self.client_context as client:
+        async with self.client_context() as client:
             try:
                 response = await client.get_object(
                     Bucket=bucket_name,
@@ -94,7 +93,7 @@ class S3Client:
         bucket_name: str,
         key: str,
     ) -> None:
-        async with self.client_context as client:
+        async with self.client_context() as client:
             await client.delete_object(
                 Bucket=bucket_name,
                 Key=key,
@@ -103,5 +102,4 @@ class S3Client:
 
 __all__ = [
     "S3Client",
-    "S3ClientContext",
 ]

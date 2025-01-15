@@ -18,8 +18,8 @@ vars:
 
 env:
   SETTINGS_PATH: "{{.SETTINGS_FOLDER}}/dev.yaml"
-  SETTINGS_WORKER_PATH: "{{.SETTINGS_FOLDER}}/worker.yaml"
   SETTINGS_TEST_PATH: "{{.SETTINGS_FOLDER}}/test.yaml"
+  SETTINGS_WORKER_PATH: "{{.SETTINGS_FOLDER}}/worker.yaml"
   APP_PORT: "8080"
 
 tasks:

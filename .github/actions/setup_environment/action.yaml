@@ -29,7 +29,7 @@ inputs:
   trivy-version:
     description: "Trivy version"
     required: true
-    default: "v0.57.1"
+    default: "v0.70.0"
   trivy-enabled:
     description: "Trivy enabled"
     required: true
@@ -66,7 +66,7 @@ runs:
 
     - name: Setup Trivy
       if: ${{ inputs.trivy-enabled == 'true' }}
-      uses: aquasecurity/setup-trivy@v0.2.2
+      uses: aquasecurity/setup-trivy@v0.2.6
       with:
         version: ${{ inputs.trivy-version }}
 

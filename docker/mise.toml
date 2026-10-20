@@ -1,0 +1,23 @@
+[tasks.build]
+description = "Build all containers"
+run = [{ task = "compose build" }]
+
+[tasks.config]
+description = "Print resulting configuration"
+run = [{ task = "compose config" }]
+
+[tasks.start]
+description = "Start all containers detached"
+run = [{ task = "compose up --detach" }]
+
+[tasks.stop]
+description = "Stop all containers"
+run = [{ task = "compose down" }]
+
+[tasks.clean]
+description = "Stop and remove all containers"
+run = [{ task = "compose down --rmi all --volumes --remove-orphans" }]
+
+[tasks.show-logs]
+description = "Show logs for all containers"
+run = [{ task = "compose logs --follow" }]

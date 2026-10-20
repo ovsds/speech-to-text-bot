@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Scan the IMAGE_REGISTRY/IMAGE_NAME:IMAGE_TAG image for vulnerabilities"
+set -euo pipefail
+
+mise run //backend:ci-image-scan

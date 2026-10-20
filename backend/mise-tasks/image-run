@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#MISE description="Run image in container"
+#USAGE arg "<target>"
+#USAGE flag "--hostname <hostname>"
+#USAGE flag "--exposed-port <port>"
+set -euo pipefail
+
+args=()
+if [ -n "${usage_hostname:-}" ]; then
+  args+=(--hostname "${usage_hostname}")
+fi
+if [ -n "${usage_exposed_port:-}" ]; then
+  args+=(--publish "${usage_exposed_port}:${usage_exposed_port}")
+fi
+
+echo "Running image ${usage_target} target..."
+# bash 3.2 treats an empty array as unbound under set -u
+docker run \
+  --network "${DOCKER_NETWORK}" \
+  ${args[@]+"${args[@]}"} \
+  --env-file <(env | cut -f1 -d=) \
+  --volume "${MISE_CONFIG_ROOT}/.settings:/settings" \
+  --env SETTINGS_PATH="/settings/dev_docker.yaml:/settings/dev.yaml" \
+  --env SETTINGS_TEST_PATH="/settings/test_docker.yaml:/settings/test.yaml" \
+  --env SETTINGS_WORKER_PATH="/settings/worker_docker.yaml:/settings/worker.yaml" \
+  "speech-to-text-bot:${usage_target}"

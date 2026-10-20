@@ -9,6 +9,6 @@ Configs and commands for auxiliary services.
 - [docker](https://docs.docker.com/engine/install/)
 - [docker-compose](https://docs.docker.com/compose/install/)
 
-### Taskfile commands
+### mise tasks
 
-For all commands see [Taskfile](Taskfile.yaml) or `task --list-all`.
+For all commands see [mise.toml](mise.toml) and [mise-tasks](mise-tasks) or `mise tasks ls`.

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#MISE description="Run docker compose for project"
+set -euo pipefail
+
+files=()
+add_files() {
+  while IFS= read -r file; do
+    files+=(--file "$file")
+  done < <(find . -type f -name "$1")
+}
+
+add_files base-compose.yaml
+case "${ENVIRONMENT:-BASE}" in
+  DEV) add_files dev-compose.yaml ;;
+  CI) add_files ci-compose.yaml ;;
+esac
+
+# bash 3.2 treats an empty array as unbound under set -u
+docker compose --project-directory . ${files[@]+"${files[@]}"} "$@"

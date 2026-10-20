@@ -6,6 +6,7 @@ import logging
 import typing
 
 import speech_recognition
+import speech_recognition.recognizers.google
 
 import lib.voice.clients.conversion as voice_conversion_clients
 import lib.voice.models as voice_models
@@ -34,7 +35,10 @@ class SpeechRecognition:
             audio_data = recognizer.record(source)
 
         try:
-            result = typing.cast(str, recognizer.recognize_google(audio_data, language="ru"))
+            result = typing.cast(
+                str,
+                speech_recognition.recognizers.google.recognize_legacy(recognizer, audio_data, language="ru"),
+            )
         except speech_recognition.UnknownValueError:
             result = "UNRECOGNIZED"
 

@@ -152,3 +152,11 @@ run = [
   "echo 'Configuring buildx...'",
   "docker buildx create --driver docker-container --use",
 ]
+
+[tasks.ci-image-push]
+description = "Build the backend runtime and worker images and push them as IMAGE_REGISTRY/IMAGE_NAME:IMAGE_TAG and :WORKER_IMAGE_TAG"
+run = [{ task = "//backend:ci-image-push" }]
+
+[tasks.ci-image-scan]
+description = "Scan the IMAGE_REGISTRY/IMAGE_NAME:IMAGE_TAG image for vulnerabilities"
+run = [{ task = "//backend:ci-image-scan" }]

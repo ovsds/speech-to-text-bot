@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Build the backend runtime and worker images and push them as IMAGE_REGISTRY/IMAGE_NAME:IMAGE_TAG and :WORKER_IMAGE_TAG"
-set -euo pipefail
-
-mise run //backend:ci-image-push

@@ -6,7 +6,6 @@ import logging
 import typing
 
 import speech_recognition
-import speech_recognition.recognizers.google
 
 import lib.voice.clients.conversion as voice_conversion_clients
 import lib.voice.models as voice_models
@@ -35,9 +34,10 @@ class SpeechRecognition:
             audio_data = recognizer.record(source)
 
         try:
+            # speechrecognition 3.17 attaches recognize_google at runtime, so pyright does not see it
             result = typing.cast(
                 str,
-                speech_recognition.recognizers.google.recognize_legacy(recognizer, audio_data, language="ru"),
+                recognizer.recognize_google(audio_data, language="ru"),  # pyright: ignore[reportAttributeAccessIssue]
             )
         except speech_recognition.UnknownValueError:
             result = "UNRECOGNIZED"

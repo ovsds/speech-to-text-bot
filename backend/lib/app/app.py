@@ -166,7 +166,7 @@ class Application:
             async def audio_storage_temporal_client_is_ready() -> bool:
                 try:
                     await audio_storage_temporal_client.service_client.check_health()
-                except Exception:
+                except Exception:  # noqa: BLE001 # Any failure means the subsystem is not ready
                     return False
                 return True
 

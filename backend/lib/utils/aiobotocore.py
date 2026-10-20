@@ -25,7 +25,7 @@ class S3Client:
     _client: AiobotocoreS3Client | None = dataclasses.field(default=None, init=False)
 
     @contextlib.asynccontextmanager
-    async def client_context(self) -> typing.AsyncGenerator[AiobotocoreS3Client, None]:
+    async def client_context(self) -> typing.AsyncGenerator[AiobotocoreS3Client]:
         if self._client is None:
             client_creator_context = self.session.create_client(
                 service_name="s3",
@@ -49,7 +49,7 @@ class S3Client:
         try:
             async with self.client_context() as client:
                 await client.list_buckets()
-        except Exception:
+        except Exception:  # noqa: BLE001 # Any failure means the subsystem is not ready
             return False
         return True
 

@@ -8,7 +8,7 @@ config_roots = [".scripts", "backend", "docker"]
 [tools]
 node = "26.12.0"
 uv = "0.13.1"
-python = "3.15.0"
+python = "3.14.8"
 "pypi:poetry" = "2.5.1"
 trivy = "0.76.0"
 zizmor = "1.31.1"
@@ -128,6 +128,7 @@ run = [
     project_name='Speech To Text Bot' \
     project_slug='speech-to-text-bot' \
     node_version='v26.12.0' \
+    python_version='3.14.8' \
     github_workflow_runs_on='ubuntu-latest' \
     owner_name='Dmitry Ovsiannikov' \
     owner_github_login='ovsds' \
@@ -144,6 +145,10 @@ run = [
 
   "echo 'Syncing package-lock.json with the updated package.json...'",
   "npm install",
+
+  "echo 'Relocking .scripts for the rendered pyproject.toml...'",
+  "rm -rf .scripts/.venv",
+  "cd .scripts && mise exec -- poetry lock",
 ]
 
 [tasks.configure-builder]

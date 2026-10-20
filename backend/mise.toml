@@ -67,6 +67,14 @@ run = [
   "npx --no -- pyright",
 ]
 
+[tasks.image-bake]
+description = "Build image target from docker-bake.hcl"
+usage = 'arg "<target>"'
+run = [
+  'echo "Building image ${usage_target}..."',
+  'docker buildx bake "${usage_target}"',
+]
+
 [tasks.image-scan]
 description = "Scan image for vulnerabilities"
 usage = 'arg "[target]" default="runtime"'
@@ -217,6 +225,7 @@ run = [
     service_name='Speech To Text Bot Backend' \
     service_slug='speech-to-text-bot' \
     service_short_slug='backend' \
+    python_version='3.14.8' \
     with_trivy='true' \
     with_ngrok='true' \
     with_docker='true' \
@@ -226,7 +235,10 @@ run = [
   ''',
 
   "echo 'Updating poetry.lock to the new pyproject.toml...'",
-  "poetry lock",
+  # The task's environment predates the render: a changed Python pin needs a fresh venv and mise environment
+  "rm -rf .venv",
+  "mise install",
+  "mise exec -- poetry lock",
 ]
 
 [tasks.ci-image-push]

@@ -370,22 +370,22 @@ files = [
 
 [[package]]
 name = "secret-transfer"
-version = "0.4.0"
+version = "0.5.0"
 description = "Yaml-based secret manager for secret load/set/clean."
 optional = false
-python-versions = ">=3.9,<3.13"
+python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "secret_transfer-0.4.0-py3-none-any.whl", hash = "sha256:bce55f9fda601a6eba2c3faef2d5c78ebc141b3081a3dcb3363b0c7ba8a229da"},
-    {file = "secret_transfer-0.4.0.tar.gz", hash = "sha256:c1f147e9c5a5ac7ba51f74fdf6d6daa14f6902256cd5915299e81a94086ffe50"},
+    {file = "secret_transfer-0.5.0-py3-none-any.whl", hash = "sha256:cde76fcf37f2ec6c3c1adb34bfd41f12df0f0ac6ea5fa36f88a2603d1fed4c7e"},
+    {file = "secret_transfer-0.5.0.tar.gz", hash = "sha256:eac0fcc667027ff56f3d9021719eeecf2cd69578524d313e85cf993a1ca657fe"},
 ]
 
 [package.dependencies]
-click = ">=8.1.3,<9.0.0"
-lazy-object-proxy = ">=1.9.0,<2.0.0"
-pydantic = ">=2.0.3,<3.0.0"
-python-dotenv = ">=1.0.0,<2.0.0"
-pyyaml = ">=6.0,<7.0"
+click = ">=8.5.0,<9.0.0"
+lazy-object-proxy = ">=1.13.0,<2.0.0"
+pydantic = ">=2.14.1,<3.0.0"
+python-dotenv = ">=1.2.4,<2.0.0"
+pyyaml = ">=6.0.3,<7.0.0"
 
 [[package]]
 name = "typing-extensions"
@@ -416,5 +416,5 @@ typing-extensions = ">=4.15.0"
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.12,<3.13"
-content-hash = "5af9ceb64fd556e99b959afa9448d1a1a134030398f7d408aa9076e63c9e1a6d"
+python-versions = ">=3.14"
+content-hash = "fcbcf6cecd908ea34ace84c38fb1b44a8396ae1eed85faa5f84b9d1ae0d6643a"

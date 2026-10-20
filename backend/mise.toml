@@ -1,5 +1,6 @@
+# aiogram supports Python <3.15 only
 [tools]
-python = "3.12"
+python = "3.14.8"
 
 [env]
 SETTINGS_PATH = "{{config_root}}/.settings/dev.yaml"

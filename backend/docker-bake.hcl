@@ -6,8 +6,8 @@ variable "WORKER_IMAGE_TAG" {}
 target "base" {
   dockerfile = "Dockerfile"
   contexts = {
-    "base_builder" = "docker-image://docker.io/library/python:3.12.7-bookworm"
-    "base_runtime" = "docker-image://docker.io/library/python:3.12.7-slim-bookworm"
+    "base_builder" = "docker-image://docker.io/library/python:3.14.8-trixie"
+    "base_runtime" = "docker-image://docker.io/library/python:3.14.8-slim-trixie"
     "sources" = "."
   }
 }

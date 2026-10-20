@@ -44,10 +44,6 @@ class Application:
                     propagate=False,
                     level=log_level,
                 ),
-                "TeleBot": logging_utils.LoggerConfig(
-                    propagate=False,
-                    level=log_level,
-                ),
             },
         )
         logging_utils.initialize(config=logging_config)

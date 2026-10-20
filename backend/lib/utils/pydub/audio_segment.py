@@ -21,7 +21,7 @@ class TempFile:
     def __enter__(self):
         return self
 
-    def __exit__(self, *_args: typing.Any, **_kwargs: typing.Any):
+    def __exit__(self, *_args: object, **_kwargs: typing.Any):
         try:
             os.remove(self._path)
         except FileNotFoundError:

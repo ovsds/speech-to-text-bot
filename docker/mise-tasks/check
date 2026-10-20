@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#MISE description="Check all containers"
+set -euo pipefail
+
+services="$(mise run compose config --services)"
+running="$(mise run compose ps --services --status running)"
+for service in $services; do
+  echo -n "Checking service $service..."
+  if grep -qxF -- "$service" <<<"$running"; then
+    echo "OK"
+  else
+    echo "ERROR: service not found"
+    exit 1
+  fi
+done

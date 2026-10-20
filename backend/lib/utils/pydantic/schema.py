@@ -15,9 +15,6 @@ def default(data: typing.Any) -> typing.Any:
     return data
 
 
-DATACLASS_T = typing.TypeVar("DATACLASS_T")
-
-
 class BaseSchema(base.BaseModel):
     @classmethod
     def from_bytes(cls, data: bytes) -> typing.Self:
@@ -47,7 +44,7 @@ class BaseSchema(base.BaseModel):
         return json_utils.dumps_str(raw_data)
 
 
-class BaseDataclassSchema(BaseSchema, typing.Generic[DATACLASS_T]):
+class BaseDataclassSchema[DATACLASS_T](BaseSchema):
     class Meta:
         DATACLASS: type = NotImplemented
 
